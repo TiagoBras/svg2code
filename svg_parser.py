@@ -15,15 +15,10 @@ class SVGNode(object):
         self.transform = self._parseTransform(xml)
         self.isDrawable = isDrawable
 
-        # print("Before:\n%s\n" % self.transform)
         if parent is not None:
             self.transform = parent.transform * self.transform
 
-        # print("After:\n%s\n" % self.transform)
-
         self.children = self._parseChildren(xml, self)
-
-        # print("%s %s" % ("-" * (self.depth + 1), re.sub(r'\{[^\}]+\}', '', xml.tag)))
 
     def _parseTransform(self, xml):
         if "transform" in xml.attrib:
@@ -58,13 +53,7 @@ class SVGNode(object):
 
             if tag == "g":
                 children.append(SVGGroup(child, parent))
-            elif tag == "rect":
-                children.append(SVGRect(child, parent))
-            elif tag == "ellipse":
-                children.append(SVGEllipse(child, parent))
-            elif tag == "circle":
-                children.append(SVGEllipse(child, parent))
-            elif tag == "path":
+            else:
                 children.append(SVGPath(child, parent))
 
         return children
@@ -109,42 +98,35 @@ class SVGGroup(SVGNode):
     def __init__(self, xml, parent=None):
         super(SVGGroup, self).__init__(xml, parent)
 
-class SVGRect(SVGNode):
-    def __init__(self, xml, parent=None):
-        super(SVGRect, self).__init__(xml, parent, True)
-
-        self.x = float(xml.attrib.get("x", 0.0))
-        self.y = float(xml.attrib.get("y", 0.0))
-        self.width = float(xml.attrib.get("width", 0.0))
-        self.height = float(xml.attrib.get("height", 0.0))
-
-    def genPath(self, name):
-        path = "let %s = UIBezierPath()"
-
-class SVGEllipse(SVGNode):
-    def __init__(self, xml, parent=None):
-        super(SVGEllipse, self).__init__(xml, parent, True)
-        self.cx = float(xml.attrib.get("cx", 0.0))
-        self.cy = float(xml.attrib.get("cy", 0.0))
-        self.rx = float(xml.attrib.get("rx", xml.attrib.get("r", 0.0)))
-        self.ry = float(xml.attrib.get("ry", xml.attrib.get("r", 0.0)))
-
-# class SVGCircle(SVGEllipse):
-#     def __init__(self, xml, parent=None):
-#         super(SVGCircle, self).__init__(xml, parent, True)
-#         self.cx = xml.attrib.get("cx", 0.0)
-#         self.cy = xml.attrib.get("cy", 0.0)
-#         self.r = xml.attrib.get("r", 0.0)
-        
+TRAILING_ZEROS_RE = re.compile(r'\.?0+$')
+def removeTrailingZeros(s):
+    result = TRAILING_ZEROS_RE.sub('', s) if '.' in s else s
+    # return result if '.' in result else result + '.0'
+    return result
+ 
 class SVGPath(SVGNode):
     def __init__(self, xml, parent=None):
         super(SVGPath, self).__init__(xml, parent, True)
-        self.commands = self._parseCommands(xml)
+        tag = re.sub(r'\{[^\}]+\}', '', xml.tag)
+
+        d = xml.attrib.get("d")
+
+        if tag == "rect":
+            d = self._rectToPath(xml)
+        elif tag == "ellipse":
+            d = self._ellipseToPath(xml)
+        elif tag == "circle":
+            d = self._ellipseToPath(xml)
+
+        if d is None:
+            raise NotImplementedError("'%s' path converter is not yet implemented" % tag)
+
+        self.commands = self._parseCommands(d)
         
-    def _parseCommands(self, xml):
+    def _parseCommands(self, d):
         COMMANDS_RE = re.compile(r"([MmZzLlHhVvCcSsQqTtAa])")
 
-        tokens = [x for x in COMMANDS_RE.split(xml.attrib.get("d")) if len(x) > 0]
+        tokens = [x for x in COMMANDS_RE.split(d) if len(x) > 0]
         
         i = 0
         commands = []
@@ -171,7 +153,43 @@ class SVGPath(SVGNode):
                 raise NotImplementedError("Command %s is not implemented" % command)
 
         return commands
-        # print(commands)
+
+    def _rectToPath(self, xml):
+        x = float(xml.attrib.get("x", 0.0))
+        y = float(xml.attrib.get("y", 0.0))
+        width = float(xml.attrib.get("width", 0.0))
+        height = float(xml.attrib.get("height", 0.0))
+  
+        points = [x, y, x + width, y, x + width, y + height, x, y + height]
+
+        a, b, c, d, e, f, g, h = [removeTrailingZeros(str(n)) for n in points]
+
+        return "M%s,%sL%s,%sL%s,%sL%s,%sZ" % (a, b, c, d, e, f, g, h)
+
+    def _ellipseToPath(self, xml):
+        cx = float(xml.attrib.get("cx", 0.0))
+        cy = float(xml.attrib.get("cy", 0.0))
+        rx = float(xml.attrib.get("rx", xml.attrib.get("r", 0.0)))
+        ry = float(xml.attrib.get("ry", xml.attrib.get("r", 0.0)))
+        K = 0.5522847498307935
+        cdX, cdY = rx * K, ry * K
+
+        points1 = [cx, cy - ry]
+        points2 = [cx + rx, cy, cx + cdX, cy - ry, cx + rx, cy - cdY]
+        points3 = [cx, cy + ry, cx + rx, cy + cdY, cx + cdX, cy + ry]
+        points4 = [cx - rx, cy, cx - cdX, cy + ry, cx - rx, cy + cdY]
+        points5 = [cx, cy - ry, cx - rx, cy - cdY, cx - cdX, cy - ry]
+
+        px, py = [removeTrailingZeros(str(n)) for n in points1]
+        p1x, p1y, p1x1, p1y1, p1x2, p1y2 = [removeTrailingZeros(str(n)) for n in points2]
+        p2x, p2y, p2x1, p2y1, p2x2, p2y2 = [removeTrailingZeros(str(n)) for n in points3]
+        p3x, p3y, p3x1, p3y1, p3x2, p3y2 = [removeTrailingZeros(str(n)) for n in points4]
+        p4x, p4y, p4x1, p4y1, p4x2, p4y2 = [removeTrailingZeros(str(n)) for n in points5]
+
+        return "M{},{}C{},{} {},{} {},{}".format(px, py, p1x1, p1y1, p1x2, p1y2, p1x, p1y) + \
+            "C{},{} {},{} {},{}".format(p2x1, p2y1, p2x2, p2y2, p2x, p2y) + \
+            "C{},{} {},{} {},{}".format(p3x1, p3y1, p3x2, p3y2, p3x, p3y) + \
+            "C{},{} {},{} {},{}Z".format(p4x1, p4y1, p4x2, p4y2, p4x, p4y)
 
 class MoveTo(object):
     def __init__(self, coordinates):
@@ -192,7 +210,6 @@ class LineTo(object):
 
     def __repr__(self):
         return "(L %f,%f)" % (self.x, self.y)
-        
 
 class CurveTo(object):
     def __init__(self, coordinates):
@@ -332,9 +349,6 @@ class M(object):
                 for k in range(cols_A):
                     C[i][j] += self[i][k] * other[k][j]
         return M(C)
-
-
-        
 
 if __name__ == '__main__':
     main()
