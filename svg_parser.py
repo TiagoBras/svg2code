@@ -1,24 +1,66 @@
 import re
 import xml.etree.ElementTree as ElementTree
 
+from svg_colors import SVG_COLORS
+
 TEXT = "M374.52,15.976L375.212,15.981C376.744,16.012 378.138,16.637 379.56,17.128C380.346,17.39 382.445,20.178 383.281,20.318C386.354,20.83 389.262,24.261 391.92,26.21C393.785,27.578 395.385,28.877 397.015,30.507C399.398,32.891 401.65,35.887 403.881,38.437C406.105,40.979 406.09,42.523 408.223,45.082C409.336,46.418 410.459,48.471 411.545,49.556C413.402,51.413 413.491,50.349 415.178,55.891C415.798,57.929 420.349,62.354 422.288,66.233C423.43,68.516 424.374,70.39 425.101,72.814C425.711,74.846 426.444,77.373 427.165,79.295C428.702,83.395 429.775,87.345 430.506,91.731C431.243,96.153 431.393,101.745 432.632,106.084C433.21,108.107 434.105,111.421 435.069,113.349C437.852,118.915 437.498,125.851 440.961,130.937C443.796,135.101 444.875,140.626 448.492,144.891C450.22,146.929 450.595,152.95 451.958,156.13C453.942,160.761 457.357,163.211 460.429,166.897C461.584,168.283 462.51,170.699 463.042,172.296C463.618,174.024 465.085,175.153 466.177,176.824C468.683,180.661 468.777,183.938 469.753,187.841C470.652,191.435 468.795,199.332 466.051,202.381C454.029,215.745 437.611,217.402 428.732,214.443C424.398,212.998 420.511,212.239 416.294,211.034C413.75,210.308 410.895,209.073 408.356,208.347C405.737,207.599 401.054,204.149 399.822,205.387C395.37,209.856 380.287,225.199 374.936,230.55C373.476,232.01 370.536,235.334 370.278,235.142C369.615,234.65 366.434,231.25 365.05,230.236C360.724,227.068 358.371,222.836 354.133,219.305C353.194,218.522 351.164,216.167 350.254,215.257C347.447,212.45 343.784,208.002 340.077,206.149C339.515,205.868 328.429,210.836 327.427,211.265C325.476,212.101 323.943,212.626 321.972,213.05C315.619,214.414 315.507,213.233 305.555,214.639C304.027,214.855 301.796,214.97 299.386,214.952C295.995,214.928 289.82,212.768 286.945,210.703C283.262,208.058 280.925,205.892 277.708,202.556C273.107,197.784 270.206,191.229 271.114,183.967C272.383,173.816 277.704,167.154 283.969,159.323C284.943,158.105 286.124,155.891 286.899,154.342C288.093,151.953 289.389,148.989 290.624,146.521C292.355,143.057 294.614,140.106 296.371,136.593C299.562,130.21 301.107,123.082 303.337,116.391C304.511,112.868 306.869,109.8 308.039,106.29C309.751,101.154 311.044,96.264 312.859,91.113C314.675,85.957 313.343,84.166 315.319,80.214C316.843,77.168 318.614,73.884 320.3,69.9C321.42,67.255 323.754,63.934 324.933,61.182C325.953,58.802 326.394,56.118 327.894,53.867C329.298,51.762 331.273,49.843 332.77,47.598C336.317,42.277 340.221,37.684 344.119,34.14L348.328,30.02C350.497,27.521 352.048,26.044 354.663,24.615C358.474,22.533 364.667,17.091 368.125,16.597C370.019,16.353 371.915,16.045 373.828,15.982L374.52,15.976ZM367.374,112.842C366.588,112.932 366.894,112.835 366.428,113.022C364.286,114.307 364.91,121.627 360.102,124.661C357.536,126.279 353.408,125.054 350.491,126.027L344.033,128.113C337.708,128.21 332.014,129.625 331.337,135.823C331.171,137.344 336.353,146.506 336.837,149.023C337.658,153.293 341.752,159.528 343.71,163.807C344.793,166.176 350.128,170.038 351.098,171.678C354.009,176.597 359.471,183.222 366.839,184.146C370.563,184.612 380.345,184.315 382.293,180.419C382.736,179.534 382.255,178.496 382.56,177.58C382.965,176.366 383.629,175.424 383.825,174.247C384.086,172.683 381.753,172.729 382.48,171.276C382.749,170.737 386.122,169.795 386.656,169.429C388.443,168.204 390.111,167.022 391.073,165.627C393.342,162.341 395.181,153.62 397.353,149.275C399.062,145.856 405.669,141.006 403.843,136.44C400.749,128.705 388.7,128.95 382.074,126.465C380.48,125.868 377.708,124.35 376.18,122.251C373.235,118.208 373.36,116.483 372.751,113.535C372.644,113.018 369.968,113.029 369.388,112.977C368.718,112.894 368.048,112.864 367.374,112.842Z"
 
 def main():
     svg = SVG.fromFile('/Users/tiagobras/Documents/ChaosTokens/SVGs/skull2.svg')
 
+class RGBAColor(object):
+    """rgba color format: [0.0, 1.0]"""
+    def __init__(self, r=0.0, g=0.0, b=0.0, a=0.0):
+        super(RGBAColor, self).__init__()
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+
+    @property
+    def components(self):
+        return [self.r, self.g, self.b, self.a]
+
+    def __eq__(self, o):
+        return self.r == o.r and self.g == o.g and self.b == o.b and self.a == o.a
+
+    def __ne__(self, o):
+        return not (self == o)
+
 class SVGNode(object):
     def __init__(self, xml, parent=None, isDrawable=False):
         super(SVGNode, self).__init__()
+        self.parent = parent
         self.depth = 0 if parent is None else parent.depth + 1
-        self.id = xml.attrib.get("id", "")
-        self.style = self._parseStyle(xml)
+        self.id = self._genId(xml, parent)
         self.transform = self._parseTransform(xml)
         self.isDrawable = isDrawable
-
+        print(("-"*self.depth) + re.sub(r'\{[^\}]+\}', '', xml.tag) + " " + self.id or self.parent.id)
+        self.style = parent.style.copy() if parent is not None else {}
+        self.style.update(self._parseStyle(xml))
+        
         if parent is not None:
             self.transform = parent.transform * self.transform
 
         self.children = self._parseChildren(xml, self)
+
+    def _genId(self, xml, parent):
+        newId = xml.attrib.get("id")
+
+        if newId is not None:
+            return newId
+
+        if parent is None:
+            return ""
+
+        newId = parent.id
+
+        m = re.search(r'(?P<n>\d+)$', newId)
+
+        if m is not None:
+            return re.sub(r'\d+$', str(int(m.group('n')) + 1), newId)
+        else:
+            return newId + '1' if parent.isDrawable else newId
 
     def _parseTransform(self, xml):
         if "transform" in xml.attrib:
@@ -58,11 +100,73 @@ class SVGNode(object):
 
         return children
 
+    def _getColorForKey(self, colorKey):
+        color = self.style.get(colorKey)
+
+        if color is None:
+            return None
+
+        color = SVG_COLORS.get(color) or color
+
+        if color == 'inherit':
+            return None
+        elif color == "none":
+            return RGBAColor(0.0, 0.0, 0.0, 0.0)
+        elif color.startswith("rgb("):
+            components = [int(x) / 255.0 for x in color[4:-1].split(",")]
+            components.append(self.style.get(colorKey + "_opacity", 1.0))
+
+            return RGBAColor(*components)
+
+        raise NotImplementedError("%s color format is not implemented" % fillColor)
+
+    @property
+    def isVisible(self):
+        fillColor = self.rgbaFillColor or RGBAColor(0.0, 0.0, 0.0, 0.0)
+        strokeColor = self.rgbaStrokeColor or RGBAColor(0.0, 0.0, 0.0, 0.0)
+
+        return fillColor.a > 0.0 or strokeColor.a > 0.0
+
+    @property
+    def rgbaFillColor(self):
+        return self._getColorForKey("fill")
+
+    @property
+    def rgbaStrokeColor(self):
+        return self._getColorForKey("stroke")
+
+    @property
+    def strokeWidth(self):
+        width = self.style.get("stoke_width")
+
+        if width is None or width == "inherit":
+            return None
+
+        if not width.endswith('px') or len(width) <= 2:
+            raise NotImplementedError("%s stroke width format is not implemented" % width)
+
+        return float(width[:-2])
+
+    @property
+    def strokeLineCap(self):
+        cap = self.style.get("stroke_linecap")
+
+        return None if cap is None or cap == "inherit" else cap
+
+    @property
+    def strokeMiterLimit(self):
+        miter = self.style.get("stroke_miterlimit")
+
+        return None if miter is None or miter == "inherit" else miter
+
+    @property
+    def usesEvenOddFillRule(self):
+        return self.style.get("fill_rule", "nonzero") == "evenodd"
+
 class SVG(SVGNode):
     def __init__(self, xml, parent=None):
         super(SVG, self).__init__(xml, parent)
         self.x, self.y, self.width, self.height = self._parseViewBox(xml)
-        self.style = self._parseStyle(xml)
 
     @classmethod
     def fromFile(cls, filename):
@@ -78,6 +182,7 @@ class SVG(SVGNode):
 
     @property
     def iterator(self):
+        """Depth-First iterator"""
         stack = [self]
 
         while stack:
@@ -85,7 +190,7 @@ class SVG(SVGNode):
 
             yield node
 
-            for child in node.children:
+            for child in reversed(node.children):
                 stack.append(child)
 
     def _parseViewBox(self, xml):
