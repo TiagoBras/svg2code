@@ -1,4 +1,4 @@
-from code_generator import CodeGenerator
+from code_generator import CodeGenerator, CodeGeneratorOptions
 from svg_parser import * 
 from svg_colors import SVG_COLORS
 from helpers import promptYesOrNo
@@ -9,52 +9,7 @@ import glob
 import sys
 
 def main():
-    parser = argparse.ArgumentParser(description="SVG2Code - Code Generator")
-    parser.add_argument('output', help='Output file name', default="SVGDrawablesKit.swift")
-    parser.add_argument('-c', '--class-name', help='Class name', default="SVGDrawablesKit")
-    parser.add_argument('-s', '--spaces', type=int, help='Numbers of spacer per indentation', default=4)
-    parser.add_argument('--tabs', help="Use tabs instead of spaces", action="store_true", default=False)
-    parser.add_argument('files', nargs='*', default='.')
-
-    args = parser.parse_args()
-
-    filesToParse = set()
-    
-    for f in args.files:
-        abspath = path.abspath(path.expanduser(f))
-
-        if path.isdir(abspath):
-            filesToParse.update(set(glob.glob(path.join(abspath, '*.svg'))))
-        elif abspath.endswith('.svg'):
-            filesToParse.add(abspath)
-
-    outputPath = path.abspath(args.output)
-    extension = path.splitext(outputPath)[1]
-
-    if extension not in ['.swift']:
-        print("There is no code generator for '%s' files yet." % extension)
-        exit(1)
-
-    options = CodeGeneratorOptions(
-        path=outputPath,
-        className=args.class_name,
-        useTabs=args.tabs,
-        spaces=args.spaces
-    )
-    swiftGen = Swift3CodeGenerator(options)
-    swiftGen.genCodeFromSVGFiles(list(filesToParse))
-
-class CodeGeneratorOptions(object):
-    def __init__(self, **kwargs):
-        super(CodeGeneratorOptions, self).__init__()
-        self.path = kwargs.get("path") or None
-        self.className = kwargs.get("className", "SVGDrawablesKit")
-        self.useTabs = kwargs.get("useTabs", False)
-        self.spaces = kwargs.get("spaces", 4)
-
-    @property
-    def indentation(self):
-        return "\t" if self.useTabs else " " * self.spaces
+    pass
 
 class Swift3CodeGenerator(CodeGenerator, object):
     def __init__(self, options=None):
