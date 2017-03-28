@@ -21,7 +21,7 @@ class Swift3CodeGenerator(CodeGenerator, object):
     def genCode(self, svgs):
         generatedCode = self._genClassCode(svgs)
 
-        if self.options.path is None:
+        if self.options.path is None or self.options.sendToSdout:
             print(generatedCode)
         else:
             fullpath = path.abspath(self.options.path)

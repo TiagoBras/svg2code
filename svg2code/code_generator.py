@@ -14,6 +14,7 @@ class CodeGeneratorOptions(object):
         self.className = kwargs.get("className", "SVGDrawablesKit")
         self.useTabs = kwargs.get("useTabs", False)
         self.spaces = kwargs.get("spaces", 4)
+        self.sendToSdout = kwargs.get("sendToSdout", False)
 
     @property
     def indentation(self):

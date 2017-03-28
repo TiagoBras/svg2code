@@ -38,6 +38,10 @@ How it works
     # To choose number of spaces used in indentation 
     $ svg2code -s <number_of_spaces>
     $ svg2code -s 2 -o ScalableImages.swift ~/Documents/AwesomeSVGS
+
+    # Send output to stdout
+    $ svg2code --stdout ~/Documents/svgs
+    $ svg2code --stdout -s 2 .
 ```
 
 
