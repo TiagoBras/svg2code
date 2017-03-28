@@ -25,6 +25,10 @@ def main():
         elif abspath.endswith('.svg'):
             filesToParse.add(abspath)
 
+    if len(filesToParse) == 0:
+        print("No SVG files found")
+        exit(0)
+
     outputPath = path.abspath(args.output)
 
     if path.isdir(outputPath):
