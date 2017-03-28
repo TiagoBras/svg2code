@@ -165,6 +165,8 @@ class SVG(SVGNode):
     def __init__(self, xml, parent=None):
         super(SVG, self).__init__(xml, parent)
         self.x, self.y, self.width, self.height = self._parseViewBox(xml)
+        self.width = xml.attrib.get("width", self.width)
+        self.height = xml.attrib.get("height", self.height)
 
     @classmethod
     def fromFile(cls, filename):
