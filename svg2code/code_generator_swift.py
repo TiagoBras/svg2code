@@ -184,7 +184,7 @@ class Swift3CodeGenerator(CodeGenerator, object):
         return "UIColor(red: {}, green: {}, blue: {}, alpha: {})".format(*color.components)
 
     def _titledName(self, name):
-        return re.sub(r'[^\w]+$|[-_]+|^\d+', '', name.title())
+        return re.sub(r'[^\w]+$|[-_]+|^\d+', '', (name or "path").title())
 
     def _genFrameRect(self, x, y, width, height):
         components = [removeTrailingZeros(str(n)) for n in [x, y, width, height]]

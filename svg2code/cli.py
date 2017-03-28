@@ -1,9 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
-from os import path
+import os
 import argparse
 import glob
 import sys
+from stat import S_ISFIFO
+from os import path
 from code_generator import CodeGeneratorOptions
 from code_generator_swift import Swift3CodeGenerator
 
@@ -19,18 +21,24 @@ def main():
     args = parser.parse_args()
 
     filesToParse = set()
-    
-    for f in args.files:
-        abspath = path.abspath(path.expanduser(f))
 
-        if path.isdir(abspath):
-            filesToParse.update(set(glob.glob(path.join(abspath, '*.svg'))))
-        elif abspath.endswith('.svg'):
-            filesToParse.add(abspath)
+    textToParse = None
 
-    if len(filesToParse) == 0:
-        print("No SVG files found")
-        exit(0)
+    # Read from stdin if it's been piped to
+    if S_ISFIFO(os.fstat(0).st_mode):
+        textToParse = sys.stdin.read()
+    else:
+        for f in args.files:
+            abspath = path.abspath(path.expanduser(f))
+
+            if path.isdir(abspath):
+                filesToParse.update(set(glob.glob(path.join(abspath, '*.svg'))))
+            elif abspath.endswith('.svg'):
+                filesToParse.add(abspath)
+
+        if len(filesToParse) == 0:
+            print("No SVG files found")
+            exit(0)
 
     outputPath = path.abspath(args.output)
 
@@ -51,7 +59,11 @@ def main():
         sendToSdout=args.stdout
     )
     swiftGen = Swift3CodeGenerator(options)
-    swiftGen.genCodeFromSVGFiles(list(filesToParse))
+
+    if textToParse is not None:
+        swiftGen.genDrawCodeFromSVGString(textToParse)
+    else:
+        swiftGen.genCodeFromSVGFiles(list(filesToParse))
 
 if __name__ == '__main__':
     main()

@@ -42,6 +42,10 @@ How it works
     # Send output to stdout
     $ svg2code --stdout ~/Documents/svgs
     $ svg2code --stdout -s 2 .
+
+    # It is also possible to pipe into it
+    $ cat <svg_file> | svg2code -o <output> <files_or_directories>
+    $ cat ~/Desktop/Logo.svg | python svg2code/cli.py --stdout -s 2
 ```
 
 
