@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 from code_generator import CodeGenerator, CodeGeneratorOptions
 from svg_parser import * 
 from svg_colors import SVG_COLORS

@@ -1,8 +1,10 @@
+from __future__ import absolute_import, division, print_function
+
 class CodeGenerator(object):
     def __init__(self):
         super(CodeGenerator, self).__init__()
     
-    def genCode(self, filename):
+    def genCode(self, svgs):
         return ""
 
 class CodeGeneratorOptions(object):

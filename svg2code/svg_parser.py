@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 import re
 import xml.etree.ElementTree as ElementTree
 from svg_colors import SVG_COLORS
@@ -6,10 +8,10 @@ class RGBAColor(object):
     """rgba color format: [0.0, 1.0]"""
     def __init__(self, r=0.0, g=0.0, b=0.0, a=0.0):
         super(RGBAColor, self).__init__()
-        self.r = r
-        self.g = g
-        self.b = b
-        self.a = a
+        self.r = float(r)
+        self.g = float(g)
+        self.b = float(b)
+        self.a = float(a)
 
     @property
     def components(self):
@@ -447,7 +449,7 @@ class M(object):
         cols_B = len(other[0])
 
         if cols_A != rows_B:
-            print "Cannot multiply the two matrices. Incorrect dimensions."
+            print("Cannot multiply the two matrices. Incorrect dimensions.")
             return
 
         C = [[0 for row in range(cols_B)] for col in range(rows_A)]
