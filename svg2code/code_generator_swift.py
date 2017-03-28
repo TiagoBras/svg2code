@@ -147,11 +147,11 @@ class Swift3CodeGenerator(CodeGenerator, object):
 
         strokeLineCap = currPath.strokeLineCap
         if strokeLineCap is not None and strokeLineCap != "butt":
-            s += indent + "%s.lineCapStyle = .%s\n" % (name, strokeLineCap)
+            s += indent + "%s.lineCapStyle = .%s\n" % (name, removeTrailingZeros(str(strokeLineCap)))
 
         strokeWidth = currPath.strokeWidth
         if strokeWidth is not None and strokeWidth != 1.0:
-            s += indent + "%s.lineWidth = %f\n" % (name, strokeWidth) 
+            s += indent + "%s.lineWidth = %s\n" % (name, removeTrailingZeros(str(strokeWidth)))
 
         fillColor = currPath.rgbaFillColor
         if fillColor is not None:
@@ -197,7 +197,7 @@ class Swift3CodeGenerator(CodeGenerator, object):
     def _genClassHelperMethods(self, indentationLevel=0):
         indent = self._indentationForLevel(indentationLevel)
         indent1 = self._indentationForLevel(indentationLevel + 1)
-        indent2 = self._indentationForLevel(indentationLevel + 1)
+        indent2 = self._indentationForLevel(indentationLevel + 2)
 
         s = ""
         s += indent + "static private func image(withSize size: CGSize, opaque: Bool, drawingMethod: (CGRect) -> Void) -> UIImage {\n"

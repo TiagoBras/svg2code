@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import re
 import xml.etree.ElementTree as ElementTree
 from svg_colors import SVG_COLORS
+from helpers import parseSVGNumber as parseNumber
 
 class RGBAColor(object):
     """rgba color format: [0.0, 1.0]"""
@@ -74,13 +75,12 @@ class SVGNode(object):
     def _parseStyle(self, xml):
         if "style" in xml.attrib:
             styleArray = [x for x in xml.attrib["style"].split(';') if len(x) > 0]
-
+            
             style = {}
             for el in styleArray:
                 key, value = el.split(':')
 
-                style[key.replace('-', '_')] = value
-
+                style[key] = value
             return style
         else:
             return {}
@@ -135,38 +135,35 @@ class SVGNode(object):
 
     @property
     def strokeWidth(self):
-        width = self.style.get("stoke_width")
+        width = self.style.get("stroke-width")
 
         if width is None or width == "inherit":
             return None
 
-        if not width.endswith('px') or len(width) <= 2:
-            raise NotImplementedError("%s stroke width format is not implemented" % width)
-
-        return float(width[:-2])
+        return parseNumber(width)
 
     @property
     def strokeLineCap(self):
-        cap = self.style.get("stroke_linecap")
+        cap = self.style.get("stroke-linecap")
 
         return None if cap is None or cap == "inherit" else cap
 
     @property
     def strokeMiterLimit(self):
-        miter = self.style.get("stroke_miterlimit")
+        miter = self.style.get("stroke-miterlimit")
 
         return None if miter is None or miter == "inherit" else miter
 
     @property
     def usesEvenOddFillRule(self):
-        return self.style.get("fill_rule", "nonzero") == "evenodd"
+        return self.style.get("fill-rule", "nonzero") == "evenodd"
 
 class SVG(SVGNode):
     def __init__(self, xml, parent=None):
         super(SVG, self).__init__(xml, parent)
         self.x, self.y, self.width, self.height = self._parseViewBox(xml)
-        self.width = xml.attrib.get("width", self.width)
-        self.height = xml.attrib.get("height", self.height)
+        self.width = parseNumber(xml.attrib.get("width", self.width))
+        self.height = parseNumber(xml.attrib.get("height", self.height))
 
     @classmethod
     def fromFile(cls, filename):
@@ -202,7 +199,7 @@ class SVG(SVGNode):
 
     def _parseViewBox(self, xml):
         if "viewBox" in xml.attrib:
-            return [float(x) for x in xml.attrib["viewBox"].split(' ')]
+            return [parseNumber(x) for x in xml.attrib["viewBox"].split(' ')]
         else:
             return [0, 0, 0, 0]
 
