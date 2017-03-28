@@ -156,21 +156,22 @@ class Swift3CodeGenerator(CodeGenerator, object):
     def _genClassHelperMethods(self, indentationLevel=0):
         indent = self._indentationForLevel(indentationLevel)
         indent1 = self._indentationForLevel(indentationLevel + 1)
+        indent2 = self._indentationForLevel(indentationLevel + 1)
 
         s = ""
         s += indent + "static private func transformToFit(rect: CGRect, inRect target: CGRect) -> CGAffineTransform {\n"
         s += indent1 + "var scale = CGPoint(\n"
-        s += indent1 + "    x: abs(target.size.width / rect.size.width),\n"
-        s += indent1 + "    y: abs(target.size.height / rect.size.height)\n"
+        s += indent2 + "x: abs(target.size.width / rect.size.width),\n"
+        s += indent2 + "y: abs(target.size.height / rect.size.height)\n"
         s += indent1 + ")\n\n"
         s += indent1 + "let tallerThanWider = scale.y < scale.x\n\n"
         s += indent1 + "scale.x = min(scale.x, scale.y)\n"
         s += indent1 + "scale.y = scale.x\n\n"
-        s += indent1 + "var translate = CGPoint.zero\n"
+        s += indent1 + "var translate = target.origin\n"
         s += indent1 + "if tallerThanWider {\n"
-        s += indent1 + "    translate.x = (target.size.width - scale.x * rect.size.width) / 2.0\n"
+        s += indent2 + "translate.x += 0.5 * (target.size.width - (rect.size.width * scale.x))\n"
         s += indent1 + "} else {\n"
-        s += indent1 + "    translate.y = (target.size.height - scale.y * rect.size.height) / 2.0\n"
+        s += indent2 + "translate.y += 0.5 * (target.size.height - (rect.size.height * scale.y))\n"
         s += indent1 + "}\n\n"
         s += indent1 + "let scaleT = CGAffineTransform(scaleX: scale.x, y: scale.y)\n"
         s += indent1 + "let translateT = CGAffineTransform(translationX: translate.x, y: translate.y)\n\n"
