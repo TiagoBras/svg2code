@@ -15,8 +15,6 @@ def main():
 
     args = parser.parse_args()
 
-    print(args)
-
     filesToParse = set()
     
     for f in args.files:
