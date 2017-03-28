@@ -40,19 +40,36 @@ class Swift3CodeGenerator(CodeGenerator, object):
         indent = self._indentationForLevel(indentationLevel)
 
         s = indent + "class %s {\n" % "StyleKit"
+        # Generate draw methods
+        for svg in svgs:
+            s += self._genImageMethod(svg, indentationLevel + 1)
+
         for svg in svgs:
             s += self._genDrawMethod(svg, indentationLevel + 1)
 
         s += "\n" + self._genClassHelperMethods(indentationLevel + 1)
         return s + indent + "}"
 
+    def _genImageMethod(self, svg, indentationLevel=0):
+        indent = self._indentationForLevel(indentationLevel)
+        indent1 = self._indentationForLevel(indentationLevel + 1)
+
+        s = ""
+        s += indent + "static func imageOf{}(withSize size: CGSize, opaque: Bool = false) -> UIImage {{\n".format(
+            self._titledName(svg.name)
+        )
+        s += indent1 + "return image(withSize: size, opaque: opaque, drawingMethod: %s)\n" % self._genDrawMethodName(svg.name)
+        s += indent + "}\n\n"
+
+        return s
+
     def _genDrawMethod(self, svg, indentationLevel=0):
         indent = self._indentationForLevel(indentationLevel)
         indent1 = self._indentationForLevel(indentationLevel + 1)
 
         frame = self._genFrameRect(svg.x, svg.y, svg.width, svg.height)
-        s = indent + "static func draw{}(inRect target: CGRect = {}) {{\n".format(
-            self._titledName(svg.name), frame
+        s = indent + "static func {}(inRect target: CGRect = {}) {{\n".format(
+            self._genDrawMethodName(svg.name), frame
         )
 
         s += indent1 + "let frame = %s\n\n" % frame
@@ -153,12 +170,22 @@ class Swift3CodeGenerator(CodeGenerator, object):
 
         return "CGRect(x: {}, y: {}, width: {}, height: {})".format(*components)
 
+    def _genDrawMethodName(self, name):
+        return "draw" + self._titledName(name)
+
     def _genClassHelperMethods(self, indentationLevel=0):
         indent = self._indentationForLevel(indentationLevel)
         indent1 = self._indentationForLevel(indentationLevel + 1)
         indent2 = self._indentationForLevel(indentationLevel + 1)
 
         s = ""
+        s += indent + "static private func image(withSize size: CGSize, opaque: Bool, drawingMethod: (CGRect) -> Void) -> UIImage {\n"
+        s += indent1 + "UIGraphicsBeginImageContextWithOptions(size, opaque, 0.0)\n\n"
+        s += indent1 + "drawingMethod(CGRect(origin: .zero, size: size))\n\n"
+        s += indent1 + "let image = UIGraphicsGetImageFromCurrentImageContext()!\n\n"
+        s += indent1 + "UIGraphicsEndImageContext()\n\n"
+        s += indent1 + "return image\n"
+        s += indent + "}\n\n"
         s += indent + "static private func transformToFit(rect: CGRect, inRect target: CGRect) -> CGAffineTransform {\n"
         s += indent1 + "var scale = CGPoint(\n"
         s += indent2 + "x: abs(target.size.width / rect.size.width),\n"
