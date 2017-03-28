@@ -2,3 +2,4 @@
 *.pyc
 svg2code.egg-info
 *.swift
+dist/
