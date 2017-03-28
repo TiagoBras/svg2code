@@ -1,45 +1,102 @@
 from code_generator import CodeGenerator
 from svg_parser import * 
 from svg_colors import SVG_COLORS
+from helpers import promptYesOrNo
 from string import Template
+from os import path
+import argparse
+import glob
+import sys
 
 def main():
-    swiftGen = Swift3CodeGenerator()
-    swiftGen.genCodeFromSVGFile("/Users/tiagobras/Documents/ChaosTokens/SVGs/rectangles.svg")
+    parser = argparse.ArgumentParser(description="SVG2Code - Code Generator")
+    parser.add_argument('output', help='Output file name', default="SVGDrawablesKit.swift")
+    parser.add_argument('-c', '--class-name', help='Class name', default="SVGDrawablesKit")
+    parser.add_argument('-s', '--spaces', type=int, help='Numbers of spacer per indentation', default=4)
+    parser.add_argument('--tabs', help="Use tabs instead of spaces", action="store_true", default=False)
+    parser.add_argument('files', nargs='*', default='.')
+
+    args = parser.parse_args()
+
+    filesToParse = set()
+    
+    for f in args.files:
+        abspath = path.abspath(path.expanduser(f))
+
+        if path.isdir(abspath):
+            filesToParse.update(set(glob.glob(path.join(abspath, '*.svg'))))
+        elif abspath.endswith('.svg'):
+            filesToParse.add(abspath)
+
+    outputPath = path.abspath(args.output)
+    extension = path.splitext(outputPath)[1]
+
+    if extension not in ['.swift']:
+        print("There is no code generator for '%s' files yet." % extension)
+        exit(1)
+
+    options = CodeGeneratorOptions(
+        path=outputPath,
+        className=args.class_name,
+        useTabs=args.tabs,
+        spaces=args.spaces
+    )
+    swiftGen = Swift3CodeGenerator(options)
+    swiftGen.genCodeFromSVGFiles(list(filesToParse))
 
 class CodeGeneratorOptions(object):
-    def __init__(self):
+    def __init__(self, **kwargs):
         super(CodeGeneratorOptions, self).__init__()
-        self.useTabs = False
-        self.spaces = 4
+        self.path = kwargs.get("path") or None
+        self.className = kwargs.get("className", "SVGDrawablesKit")
+        self.useTabs = kwargs.get("useTabs", False)
+        self.spaces = kwargs.get("spaces", 4)
 
     @property
     def indentation(self):
         return "\t" if self.useTabs else " " * self.spaces
 
 class Swift3CodeGenerator(CodeGenerator, object):
-    def __init__(self,  options=None):
+    def __init__(self, options=None):
         super(Swift3CodeGenerator, self).__init__()
         self.options = options or CodeGeneratorOptions()
-   
-    def genCodeFromSVGFile(self, filename):
-        svg = SVG.fromFile(filename)
 
-        self.genCode(svg)
+    def genCode(self, svgs):
+        generatedCode = self._genClassCode(svgs)
+
+        if self.options.path is None:
+            print(generatedCode)
+        else:
+            fullpath = path.abspath(self.options.path)
+            filename = path.basename(fullpath)
+
+            if path.exists(fullpath):
+                if not promptYesOrNo("'%s' already exists, would you like to overwrite it? (Y/N)" % filename):
+                    print("Code generation aborted")
+                    return
+
+            with open(fullpath, 'w') as f:
+                f.write(generatedCode)
+
+            print("'%s' created successfuly" % filename)
+
+    def genCodeFromSVGFiles(self, filenames):
+        if not isinstance(filenames, (list, tuple)):
+            filenames = [filenames]
+
+        svgs = [SVG.fromFile(x) for x in filenames]
+
+        self.genCode(svgs)
 
     def genDrawCodeFromSVGString(self, string):
         svg = SVG.fromString(string)
-        self.genCode(svg)
-
-    def genCode(self, svg):
-        s = self._genClassCode([svg])
-
-        print(s)
+        self.genCode([svg])
 
     def _genClassCode(self, svgs, indentationLevel=0):
         indent = self._indentationForLevel(indentationLevel)
 
-        s = indent + "class %s {\n" % "StyleKit"
+        s = indent + "import UIKit\n\n"
+        s += indent + "class %s {\n" % self.options.className
         # Generate draw methods
         for svg in svgs:
             s += self._genImageMethod(svg, indentationLevel + 1)
@@ -75,8 +132,9 @@ class Swift3CodeGenerator(CodeGenerator, object):
         s += indent1 + "let frame = %s\n\n" % frame
         s += indent1 + "let context = UIGraphicsGetCurrentContext()!\n"
         s += indent1 + "context.saveGState()\n"
-        s += indent1 + "context.concatenate(StyleKit.transformToFit(rect: frame, inRect: target))\n\n"
+        s += indent1 + "context.concatenate(%s.transformToFit(rect: frame, inRect: target))\n\n" % self.options.className
 
+        didntDrawAnything = True
         pathIndex = 1
         lastPath = None
         for node in svg.iterator:
@@ -89,6 +147,12 @@ class Swift3CodeGenerator(CodeGenerator, object):
                 s += self._genPathCode(node, name, lastPath, indentationLevel + 1) + "\n"
                 
                 lastPath = node
+                didntDrawAnything = False
+
+        if didntDrawAnything:
+            print("Warning: Didn't find anything to draw in '%s'" % svg.name)
+
+            s += indent1 + "// There was nothing to draw here. ('%s')\n\n" % svg.name
 
         s += indent1 + "context.restoreGState()\n"
         s += indent + "}\n"
