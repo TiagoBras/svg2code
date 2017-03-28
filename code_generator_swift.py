@@ -27,14 +27,40 @@ class Swift3CodeGenerator(CodeGenerator, object):
 
         self.genCode(svg)
 
-    def genCodeFromSVGString(self, string):
+    def genDrawCodeFromSVGString(self, string):
         svg = SVG.fromString(string)
         self.genCode(svg)
 
     def genCode(self, svg):
-        indentLevel = 1
+        s = self._genClassCode([svg])
+
+        print(s)
+
+    def _genClassCode(self, svgs, indentationLevel=0):
+        indent = self._indentationForLevel(indentationLevel)
+
+        s = indent + "class %s {\n" % "StyleKit"
+        for svg in svgs:
+            s += self._genDrawMethod(svg, indentationLevel + 1)
+
+        s += "\n" + self._genClassHelperMethods(indentationLevel + 1)
+        return s + indent + "}"
+
+    def _genDrawMethod(self, svg, indentationLevel=0):
+        indent = self._indentationForLevel(indentationLevel)
+        indent1 = self._indentationForLevel(indentationLevel + 1)
+
+        frame = self._genFrameRect(svg.x, svg.y, svg.width, svg.height)
+        s = indent + "static func draw{}(inRect target: CGRect = {}) {{\n".format(
+            self._titledName(svg.name), frame
+        )
+
+        s += indent1 + "let frame = %s\n\n" % frame
+        s += indent1 + "let context = UIGraphicsGetCurrentContext()!\n"
+        s += indent1 + "context.saveGState()\n"
+        s += indent1 + "context.concatenate(StyleKit.transformToFit(rect: frame, inRect: target))\n\n"
+
         pathIndex = 1
-        
         lastPath = None
         for node in svg.iterator:
             if node.isDrawable and node.isVisible:
@@ -43,11 +69,14 @@ class Swift3CodeGenerator(CodeGenerator, object):
                     name = "path%d" % pathIndex
                     pathIndex += 1
     
-                s = self._genPathCode(node, name, lastPath)
+                s += self._genPathCode(node, name, lastPath, indentationLevel + 1) + "\n"
                 
                 lastPath = node
 
-                print(s)
+        s += indent1 + "context.restoreGState()\n"
+        s += indent + "}\n"
+
+        return s
 
     def _genPathCode(self, currPath, name, lastPath=None, indentationLevel=0):
         indent = self._indentationForLevel(indentationLevel)
@@ -115,6 +144,46 @@ class Swift3CodeGenerator(CodeGenerator, object):
 
     def _rgbaToUIColor(self, color):
         return "UIColor(red: {}, green: {}, blue: {}, alpha: {})".format(*color.components)
+
+    def _titledName(self, name):
+        return re.sub(r'[^\w]+$|[-_]+|^\d+', '', name.title())
+
+    def _genFrameRect(self, x, y, width, height):
+        components = [removeTrailingZeros(str(n)) for n in [x, y, width, height]]
+
+        return "CGRect(x: {}, y: {}, width: {}, height: {})".format(*components)
+
+    def _genClassHelperMethods(self, indentationLevel=0):
+        indent = self._indentationForLevel(indentationLevel)
+        indent1 = self._indentationForLevel(indentationLevel + 1)
+
+        s = ""
+        s += indent + "static private func transformToFit(rect: CGRect, inRect target: CGRect) -> CGAffineTransform {\n"
+        s += indent1 + "var scale = CGPoint(\n"
+        s += indent1 + "    x: abs(target.size.width / rect.size.width),\n"
+        s += indent1 + "    y: abs(target.size.height / rect.size.height)\n"
+        s += indent1 + ")\n\n"
+        s += indent1 + "let tallerThanWider = scale.y < scale.x\n\n"
+        s += indent1 + "scale.x = min(scale.x, scale.y)\n"
+        s += indent1 + "scale.y = scale.x\n\n"
+        s += indent1 + "var translate = CGPoint.zero\n"
+        s += indent1 + "if tallerThanWider {\n"
+        s += indent1 + "    translate.x = (target.size.width - scale.x * rect.size.width) / 2.0\n"
+        s += indent1 + "} else {\n"
+        s += indent1 + "    translate.y = (target.size.height - scale.y * rect.size.height) / 2.0\n"
+        s += indent1 + "}\n\n"
+        s += indent1 + "let scaleT = CGAffineTransform(scaleX: scale.x, y: scale.y)\n"
+        s += indent1 + "let translateT = CGAffineTransform(translationX: translate.x, y: translate.y)\n\n"
+        s += indent1 + "return scaleT.concatenating(translateT)\n"
+        s += indent + "}\n"
+
+        return s
+
+TRAILING_ZEROS_RE = re.compile(r'\.?0+$')
+def removeTrailingZeros(s):
+    result = TRAILING_ZEROS_RE.sub('', s) if '.' in s else s
+    # return result if '.' in result else result + '.0'
+    return result
 
 if __name__ == '__main__':
     main()

@@ -35,7 +35,7 @@ class SVGNode(object):
         self.id = self._genId(xml, parent)
         self.transform = self._parseTransform(xml)
         self.isDrawable = isDrawable
-        print(("-"*self.depth) + re.sub(r'\{[^\}]+\}', '', xml.tag) + " " + self.id or self.parent.id)
+        # print(("-"*self.depth) + re.sub(r'\{[^\}]+\}', '', xml.tag) + " " + self.id or self.parent.id)
         self.style = parent.style.copy() if parent is not None else {}
         self.style.update(self._parseStyle(xml))
         
@@ -179,6 +179,13 @@ class SVG(SVGNode):
         root = ElementTree.fromstring(string)
 
         return cls(root)
+
+    @property
+    def name(self):
+        for node in self.iterator:
+            if node.id:
+                return node.id
+        return None
 
     @property
     def iterator(self):
