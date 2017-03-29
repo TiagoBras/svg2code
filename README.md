@@ -4,7 +4,7 @@ SVG2Code
 Combines one or multiple SVG files into a class containing drawing methods using bezier curves to
 enable smooth curves drawing no matter the size. It also generates methods to create images of whatever size.
 
-I decided to create this project because I needed to personalized the code generation.
+I decided to create this project because I needed complete control of the code generation.
 
 
 Installation
