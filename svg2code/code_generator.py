@@ -15,6 +15,7 @@ class CodeGeneratorOptions(object):
         self.useTabs = kwargs.get("useTabs", False)
         self.spaces = kwargs.get("spaces", 4)
         self.sendToSdout = kwargs.get("sendToSdout", False)
+        self.normalizeCoords = kwargs.get("normalizeCoords", False)
 
     @property
     def indentation(self):

@@ -15,6 +15,7 @@ def main():
     parser.add_argument('-c', '--class-name', help='Class name', default="SVGDrawablesKit")
     parser.add_argument('-s', '--spaces', type=int, help='Numbers of spacer per indentation', default=4)
     parser.add_argument('--tabs', help="Use tabs instead of spaces", action="store_true", default=False)
+    parser.add_argument('-n', '--normalize', help="Normalize coordinates [0.0, 1.0]", action="store_true", default=False)
     parser.add_argument('--stdout', help="Instead of saving the output in a file it sends it to stdout", action="store_true", default=False)
     parser.add_argument('files', nargs='*', default='.')
 
@@ -56,7 +57,8 @@ def main():
         className=args.class_name,
         useTabs=args.tabs,
         spaces=args.spaces,
-        sendToSdout=args.stdout
+        sendToSdout=args.stdout,
+        normalizeCoords=args.normalize
     )
     swiftGen = Swift3CodeGenerator(options)
 

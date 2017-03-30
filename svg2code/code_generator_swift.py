@@ -100,8 +100,11 @@ class Swift3CodeGenerator(CodeGenerator, object):
                 if len(name) == 0:
                     name = "path%d" % pathIndex
                     pathIndex += 1
-    
-                s += self._genPathCode(node, name, lastPath, indentationLevel + 1) + "\n"
+                
+                if self.options.normalizeCoords:
+                    s += self._genPathCode(node, name, lastPath, indentationLevel + 1, svg) + "\n"
+                else:
+                    s += self._genPathCode(node, name, lastPath, indentationLevel + 1) + "\n"
                 
                 lastPath = node
                 didntDrawAnything = False
@@ -116,7 +119,7 @@ class Swift3CodeGenerator(CodeGenerator, object):
 
         return s
 
-    def _genPathCode(self, currPath, name, lastPath=None, indentationLevel=0):
+    def _genPathCode(self, currPath, name, lastPath=None, indentationLevel=0, normalizeForSVG=None):
         indent = self._indentationForLevel(indentationLevel)
 
         s = indent + "let %s = UIBezierPath()\n" % name
@@ -126,16 +129,30 @@ class Swift3CodeGenerator(CodeGenerator, object):
 
             if isinstance(c, MoveTo):
                 p = P(c.x, c.y).applyTransform(currPath.transform)
+
+                if normalizeForSVG is not None:
+                    p.normalizeForSize(normalizeForSVG.width, normalizeForSVG.height)
+
                 s += "move(to: CGPoint(x: %f, y: %f))\n" % (p.x, p.y)
             elif isinstance(c, ClosePath):
                 s += "close()\n"
             elif isinstance(c, LineTo):
                 p = P(c.x, c.y).applyTransform(currPath.transform)
+
+                if normalizeForSVG is not None:
+                    p.normalizeForSize(normalizeForSVG.width, normalizeForSVG.height)
+
                 s += "addLine(to: CGPoint(x: %f, y: %f))\n" % (p.x, p.y)
             elif isinstance(c, CurveTo):
                 p = P(c.x, c.y).applyTransform(currPath.transform)
                 c1 = P(c.x1, c.y1).applyTransform(currPath.transform)
                 c2 = P(c.x2, c.y2).applyTransform(currPath.transform)
+
+                if normalizeForSVG is not None:
+                    p.normalizeForSize(normalizeForSVG.width, normalizeForSVG.height)
+                    c1.normalizeForSize(normalizeForSVG.width, normalizeForSVG.height)
+                    c2.normalizeForSize(normalizeForSVG.width, normalizeForSVG.height)
+
                 s += ("addCurve(to: CGPoint(x: %f, y: %f), "
                     "controlPoint1: CGPoint(x: %f, y: %f), "
                     "controlPoint2: CGPoint(x: %f, y: %f))\n") % (p.x, p.y, c1.x, c1.y, c2.x, c2.y)

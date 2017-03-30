@@ -361,6 +361,11 @@ class P(object):
 
         return P(x, y, z)
 
+    def normalizeForSize(self, maxWidth, maxHeight, maxDepth=1.0):
+        self.x /= maxWidth
+        self.y /= maxHeight
+        self.z /= maxDepth
+
 class M(object):
     def __init__(self, array=None, **kwargs):
         super(M, self).__init__()
