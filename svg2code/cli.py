@@ -12,10 +12,10 @@ from svg2code.code_generator import CodeGenerator, CodeGeneratorOptions
 def main():
     parser = argparse.ArgumentParser(description="SVG2Code - Code Generator")
     parser.add_argument('-o', '--output', help='Output file name', default="SVGDrawablesKit.swift")
-    # parser.add_argument('-c', '--class-name', help='Class name', default="SVGDrawablesKit")
+    parser.add_argument('-c', '--class-name', help='Class name', default="SVGDrawablesKit")
     parser.add_argument('-s', '--spaces', type=int, help='Numbers of spacer per indentation', default=4)
     parser.add_argument('--tabs', help="Use tabs instead of spaces", action="store_true", default=False)
-    parser.add_argument('-n', '--normalize', help="Normalize coordinates [0.0, 1.0]", action="store_true", default=False)
+    # parser.add_argument('-n', '--normalize', help="Normalize coordinates [0.0, 1.0]", action="store_true", default=False)
     parser.add_argument('--stdout', help="Instead of saving the output in a file it sends it to stdout", action="store_true", default=False)
     parser.add_argument('files', nargs='*', default='.')
 
@@ -53,11 +53,11 @@ def main():
         exit(1)
 
     options = CodeGeneratorOptions(
-        # className=args.class_name,
+        className=args.class_name,
         useTabs=args.tabs,
         spaces=args.spaces,
         sendToSdout=args.stdout,
-        normalizeCoords=args.normalize
+        # normalizeCoords=args.normalize
     )
     generator = CodeGenerator(options)
 

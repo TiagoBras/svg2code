@@ -53,7 +53,7 @@
     {% for path in svg.paths %}
         {% set pathName = "path" + loop.index | string %}   
         let {{ pathName }} = {{ class_name }}.{{ enumCase(svg.name) }}Path{{ loop.index }}
-    {{ makeBezierPathStyle(path, pathName) | indent(spaces) }}
+    {{ makeBezierPathStyle(path, pathName) | indent(4) }}
     {% endfor %}
 {% endmacro %}
 {% macro enumCase(name) %}
@@ -180,7 +180,7 @@ enum {{ class_name }} {
 {% for svg in svgs %}
     {% for path in svg.paths %}
     private static let {{ enumCase(svg.name) }}Path{{ loop.index }}: UIBezierPath = {
-    {{ makeBezierPath(path, "path") | indent(spaces) }}
+    {{ makeBezierPath(path, "path") | indent(4) }}
         return path
     }()
     {% endfor %}

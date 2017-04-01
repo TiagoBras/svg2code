@@ -66,7 +66,7 @@ def main():
 def reindentFrom4SpacesTo(text, spaces, useTabs=False):
     regex = re.compile(r'^(?P<tab>(    )+|(\t+))', re.MULTILINE)
     s = spaces * " " if not useTabs else '\t'
-    
+
     def cb(m):
         ws = m.group('tab')
         return s * len(ws) if ws[0] == "\t" else s * (len(ws) // 4)
@@ -88,7 +88,9 @@ class CodeGenerator(object):
         if template is None:
             raise NotImplementedError("Code generator for '%s' is not yet implemented" % extension)
 
-        generatedCode = template.render(class_name=filename, svgs=svgs, spaces=4).encode('utf-8')
+        generatedCode = template.render(
+            class_name=self.options.className, 
+            svgs=svgs).encode('utf-8')
 
         generatedCode = reindentFrom4SpacesTo(generatedCode, self.options.spaces, self.options.useTabs)
 
