@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
 import os
@@ -6,13 +7,12 @@ import glob
 import sys
 from stat import S_ISFIFO
 from os import path
-from code_generator import CodeGeneratorOptions
-from code_generator_swift import Swift3CodeGenerator
+from svg2code.code_generator import CodeGenerator, CodeGeneratorOptions
 
 def main():
     parser = argparse.ArgumentParser(description="SVG2Code - Code Generator")
     parser.add_argument('-o', '--output', help='Output file name', default="SVGDrawablesKit.swift")
-    parser.add_argument('-c', '--class-name', help='Class name', default="SVGDrawablesKit")
+    # parser.add_argument('-c', '--class-name', help='Class name', default="SVGDrawablesKit")
     parser.add_argument('-s', '--spaces', type=int, help='Numbers of spacer per indentation', default=4)
     parser.add_argument('--tabs', help="Use tabs instead of spaces", action="store_true", default=False)
     parser.add_argument('-n', '--normalize', help="Normalize coordinates [0.0, 1.0]", action="store_true", default=False)
@@ -53,19 +53,18 @@ def main():
         exit(1)
 
     options = CodeGeneratorOptions(
-        path=outputPath,
-        className=args.class_name,
+        # className=args.class_name,
         useTabs=args.tabs,
         spaces=args.spaces,
         sendToSdout=args.stdout,
         normalizeCoords=args.normalize
     )
-    swiftGen = Swift3CodeGenerator(options)
+    generator = CodeGenerator(options)
 
     if textToParse is not None:
-        swiftGen.genDrawCodeFromSVGString(textToParse)
+        generator.genDrawCodeFromSVGString(textToParse)
     else:
-        swiftGen.genCodeFromSVGFiles(list(filesToParse))
+        generator.genCodeFromSVGFiles(list(filesToParse), outputPath)
 
 if __name__ == '__main__':
     main()

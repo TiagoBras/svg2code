@@ -31,6 +31,7 @@ setup(
             'svg2code = svg2code.cli:main'
         ]
     },
+    install_requires=['Jinja2>=2.9.5'],
     setup_requires=[],
     tests_require=[]
 )

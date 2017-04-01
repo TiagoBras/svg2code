@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
 import re
 import xml.etree.ElementTree as ElementTree
-from svg_colors import SVG_COLORS
-from helpers import parseSVGNumber as parseNumber
+from svg2code.svg_colors import SVG_COLORS
+from svg2code.helpers import parseSVGNumber as parseNumber
+from os import path
 
 class RGBAColor(object):
     """rgba color format: [0.0, 1.0]"""
@@ -159,36 +161,37 @@ class SVGNode(object):
         return self.style.get("fill-rule", "nonzero") == "evenodd"
 
 class SVG(SVGNode):
-    def __init__(self, xml, parent=None):
-        super(SVG, self).__init__(xml, parent)
+    def __init__(self, xml, name):
+        super(SVG, self).__init__(xml)
         self.x, self.y, self.width, self.height = self._parseViewBox(xml)
-        width = xml.attrib.get("width", "")
 
-        if width.endswith("%"):
-            self.width = parseNumber(width) * self.width / 100.0
+        width = xml.attrib.get("width", None)
+        if width is not None:
+            if width.endswith("%"):
+                self.width = parseNumber(width) * self.width / 100.0
+            else:
+                self.width = parseNumber(width)
 
-        height = xml.attrib.get("height", "")
-        if height.endswith("%"):
-            self.height = parseNumber(height) * self.height / 100.0
+        height = xml.attrib.get("height", None)
+        if height is not None:
+            if height.endswith("%"):
+                self.height = parseNumber(height) * self.height / 100.0
+            else:
+                self.height = parseNumber(height)
+
+        self.name = name
 
     @classmethod
-    def fromFile(cls, filename):
-        tree = ElementTree.parse(filename)
+    def fromFile(cls, filepath):
+        tree = ElementTree.parse(filepath)
 
-        return cls(tree.getroot())
+        return cls(tree.getroot(), path.splitext(path.basename(filepath))[0])
 
     @classmethod
-    def fromString(cls, string):
+    def fromString(cls, string, name):
         root = ElementTree.fromstring(string)
 
-        return cls(root)
-
-    @property
-    def name(self):
-        for node in self.iterator:
-            if node.id:
-                return node.id
-        return None
+        return cls(root, name)
 
     @property
     def iterator(self):
@@ -202,6 +205,12 @@ class SVG(SVGNode):
 
             for child in reversed(node.children):
                 stack.append(child)
+
+    @property
+    def paths(self):
+        for node in self.iterator:
+            if isinstance(node, SVGPath) and node.isDrawable and node.isVisible:
+                yield node
 
     def _parseViewBox(self, xml):
         if "viewBox" in xml.attrib:
@@ -254,13 +263,13 @@ class SVGPath(SVGNode):
 
             if command == 'M':
                 i += 2
-                commands.append(MoveTo(coordinates))
+                commands.append(MoveTo.fromSVGString(coordinates).withTransform(self.transform))
             elif command == 'L':
                 i += 2
-                commands.append(LineTo(coordinates))
+                commands.append(LineTo.fromSVGString(coordinates).withTransform(self.transform))
             elif command == 'C':
                 i += 2
-                commands.append(CurveTo(coordinates))
+                commands.append(CurveTo.fromSVGString(coordinates).withTransform(self.transform))
             elif command == 'Z':
                 i += 1
                 commands.append(ClosePath())
@@ -307,38 +316,77 @@ class SVGPath(SVGNode):
             "C{},{} {},{} {},{}Z".format(p4x1, p4y1, p4x2, p4y2, p4x, p4y)
 
 class MoveTo(object):
-    def __init__(self, coordinates):
+    def __init__(self, x, y):
         super(MoveTo, self).__init__()
-        xy = coordinates.split(',')
-        self.x = float(xy[0])
-        self.y = float(xy[1])
+        self.x = float(x)
+        self.y = float(y)
 
     def __repr__(self):
         return "(M %f,%f)" % (self.x, self.y)
 
+    @classmethod
+    def fromSVGString(cls, string):
+        xy = string.split(',')
+
+        return cls(xy[0], xy[1])
+
+    def withTransform(self, transform):
+        p = P(self.x, self.y).applyTransform(transform)
+        
+        return MoveTo(p.x, p.y)
+
+
 class LineTo(object):
-    def __init__(self, coordinates):
+    def __init__(self, x, y):
         super(LineTo, self).__init__()
-        xy = coordinates.split(',')
-        self.x = float(xy[0])
-        self.y = float(xy[1])
+        self.x = float(x)
+        self.y = float(y)
 
     def __repr__(self):
         return "(L %f,%f)" % (self.x, self.y)
 
+    @classmethod
+    def fromSVGString(cls, string):
+        xy = string.split(',')
+
+        return cls(xy[0], xy[1])
+
+    def withTransform(self, transform):
+        p = P(self.x, self.y).applyTransform(transform)
+        
+        return LineTo(p.x, p.y)
+
 class CurveTo(object):
-    def __init__(self, coordinates):
+    def __init__(self, x, y, x1, y1, x2, y2):
         super(CurveTo, self).__init__()
-        x1y1x2y2xy = [x.split(',') for x in coordinates.split(' ')]
-        self.x1 = float(x1y1x2y2xy[0][0])
-        self.y1 = float(x1y1x2y2xy[0][1])
-        self.x2 = float(x1y1x2y2xy[1][0])
-        self.y2 = float(x1y1x2y2xy[1][1])
-        self.x = float(x1y1x2y2xy[2][0])
-        self.y = float(x1y1x2y2xy[2][1])
+        self.x = float(x)
+        self.y = float(y)
+        self.x1 = float(x1)
+        self.y1 = float(y1)
+        self.x2 = float(x2)
+        self.y2 = float(y2)
 
     def __repr__(self):
         return "(C %f,%f %f,%f %f,%f)" % (self.x1, self.y1, self.x2, self.y2, self.x, self.y)
+
+    @classmethod
+    def fromSVGString(cls, string):
+        x1y1x2y2xy = [x.split(',') for x in string.split(' ')]
+        x1 = x1y1x2y2xy[0][0]
+        y1 = x1y1x2y2xy[0][1]
+        x2 = x1y1x2y2xy[1][0]
+        y2 = x1y1x2y2xy[1][1]
+        x = x1y1x2y2xy[2][0]
+        y = x1y1x2y2xy[2][1]
+
+        return cls(x, y, x1, y1, x2, y2)
+
+    def withTransform(self, transform):
+        p = P(self.x, self.y).applyTransform(transform)
+        p1 = P(self.x1, self.y1).applyTransform(transform)
+        p2 = P(self.x2, self.y2).applyTransform(transform)
+
+        return CurveTo(p.x, p.y, p1.x, p1.y, p2.x, p2.y)
 
 class ClosePath(object):
     def __init__(self):
