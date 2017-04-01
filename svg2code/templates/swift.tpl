@@ -61,6 +61,7 @@
 {%- endmacro %}
 //
 //  {{ class_name }}.swift
+//  {{ project }}
 //
 //  Created by {{ author }} on {{ date.day|string|lpad(2, '0') }}/{{ date.month|string|lpad(2, '0') }}/{{ date.year }}.
 //  Copyright © {{ date.year }} {{ author | removewhitespace }}. All rights reserved.

@@ -98,6 +98,7 @@ class CodeGenerator(object):
             raise NotImplementedError("Code generator for '%s' is not yet implemented" % extension)
 
         generatedCode = template.render(
+            project=self.options.project,
             author=self.options.author,
             class_name=self.options.className, 
             date=datetime.now(),
@@ -133,6 +134,7 @@ class CodeGenerator(object):
 class CodeGeneratorOptions(object):
     def __init__(self, **kwargs):
         super(CodeGeneratorOptions, self).__init__()
+        self.project = kwargs.get("project", "Project")
         self.author = kwargs.get("author", "Author")
         self.className = kwargs.get("className", "SVGDrawablesKit")
         self.useTabs = kwargs.get("useTabs", False)

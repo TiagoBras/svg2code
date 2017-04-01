@@ -15,6 +15,7 @@ def main():
     parser.add_argument('-c', '--class-name', help='Class name', default="SVGDrawablesKit")
     parser.add_argument('-s', '--spaces', type=int, help='Numbers of spacer per indentation', default=4)
     parser.add_argument('--author', type=str, help="Author's name", default="Author")
+    parser.add_argument('--project', type=str, help="Project's name", default="Project")
     parser.add_argument('--tabs', help="Use tabs instead of spaces", action="store_true", default=False)
     parser.add_argument('--stdout', help="Instead of saving the output in a file it sends it to stdout", action="store_true", default=False)
     parser.add_argument('files', nargs='*', default='.')
@@ -57,7 +58,8 @@ def main():
         useTabs=args.tabs,
         spaces=args.spaces,
         sendToSdout=args.stdout,
-        author=args.author.decode("utf8")
+        author=args.author.decode("utf8"),
+        project=args.project.decode("utf8")
     )
     generator = CodeGenerator(options)
 
