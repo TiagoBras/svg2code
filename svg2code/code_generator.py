@@ -4,6 +4,7 @@ from jinja2 import Environment, PackageLoader
 from svg2code.svg_parser import SVG, MoveTo, LineTo, CurveTo, ClosePath
 from os import path
 from svg2code.helpers import promptYesOrNo
+from datetime import datetime
 import re
 
 env = Environment(
@@ -52,11 +53,19 @@ def stripZeros(n):
 
     return s
 
+def removeWhitespace(s):
+    return re.sub(r'\s+', '', s)
+
 def firstLower(s):
     return s if len(s) == 0 else s[0].lower() + s[1:]
 
+def lpad(s, length, ch=' '):
+    return s.rjust(length, ch)
+
 env.filters["stripzeros"] = stripZeros
 env.filters["firstlower"] = firstLower
+env.filters["removewhitespace"] = removeWhitespace
+env.filters["lpad"] = lpad
 
 def main():
     options = CodeGeneratorOptions()
@@ -89,7 +98,9 @@ class CodeGenerator(object):
             raise NotImplementedError("Code generator for '%s' is not yet implemented" % extension)
 
         generatedCode = template.render(
+            author=self.options.author,
             class_name=self.options.className, 
+            date=datetime.now(),
             svgs=svgs).encode('utf-8')
 
         generatedCode = reindentFrom4SpacesTo(generatedCode, self.options.spaces, self.options.useTabs)
@@ -122,6 +133,7 @@ class CodeGenerator(object):
 class CodeGeneratorOptions(object):
     def __init__(self, **kwargs):
         super(CodeGeneratorOptions, self).__init__()
+        self.author = kwargs.get("author", "Author")
         self.className = kwargs.get("className", "SVGDrawablesKit")
         self.useTabs = kwargs.get("useTabs", False)
         self.spaces = int(kwargs.get("spaces", 4))

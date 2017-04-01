@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 import argparse
@@ -14,8 +14,8 @@ def main():
     parser.add_argument('-o', '--output', help='Output file name', default="SVGDrawablesKit.swift")
     parser.add_argument('-c', '--class-name', help='Class name', default="SVGDrawablesKit")
     parser.add_argument('-s', '--spaces', type=int, help='Numbers of spacer per indentation', default=4)
+    parser.add_argument('--author', type=str, help="Author's name", default="Author")
     parser.add_argument('--tabs', help="Use tabs instead of spaces", action="store_true", default=False)
-    # parser.add_argument('-n', '--normalize', help="Normalize coordinates [0.0, 1.0]", action="store_true", default=False)
     parser.add_argument('--stdout', help="Instead of saving the output in a file it sends it to stdout", action="store_true", default=False)
     parser.add_argument('files', nargs='*', default='.')
 
@@ -57,7 +57,7 @@ def main():
         useTabs=args.tabs,
         spaces=args.spaces,
         sendToSdout=args.stdout,
-        # normalizeCoords=args.normalize
+        author=args.author.decode("utf8")
     )
     generator = CodeGenerator(options)
 

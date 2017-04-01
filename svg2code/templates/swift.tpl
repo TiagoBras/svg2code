@@ -62,8 +62,8 @@
 //
 //  {{ class_name }}.swift
 //
-//  Created by {{ author or "Author" }} on {{ date }}.
-//  Copyright 日本語 {{ copyright_year }} {{ author or "Author" }}. All rights reserved.
+//  Created by {{ author }} on {{ date.day|string|lpad(2, '0') }}/{{ date.month|string|lpad(2, '0') }}/{{ date.year }}.
+//  Copyright © {{ date.year }} {{ author | removewhitespace }}. All rights reserved.
 //
 
 import UIKit
