@@ -82,22 +82,6 @@ enum {{ class_name }} {
         }
     }
 
-    func image(withSize size: CGSize, opaque: Bool = false, alignment: Alignment = .center) -> UIImage {
-        switch self {
-    {% for svg in svgs %}
-        case .{{ enumCase(svg.name) }}: return {{ class_name }}.image(withSize: size, opaque: opaque, alignment: alignment, drawingMethod: {{ class_name }}.draw{{ svg.name | title }})
-    {% endfor %}
-        }
-    }
-
-    func draw(inRect target: CGRect, alignment: Alignment = .center){
-        switch self {
-    {% for svg in svgs %}
-        case .{{ enumCase(svg.name) }}: return {{ class_name }}.draw{{ svg.name | title }}(inRect: target, alignment: alignment)
-    {% endfor %}
-        }
-    }
-
     var path: UIBezierPath {
         switch self {
     {% for svg in svgs %}
@@ -111,6 +95,22 @@ enum {{ class_name }} {
         {% endfor %}
             return path
         {% endif %}
+    {% endfor %}
+        }
+    }
+
+    func image(withSize size: CGSize, opaque: Bool = false, alignment: Alignment = .center) -> UIImage {
+        switch self {
+    {% for svg in svgs %}
+        case .{{ enumCase(svg.name) }}: return {{ class_name }}.image(withSize: size, opaque: opaque, alignment: alignment, drawingMethod: {{ class_name }}.draw{{ svg.name | title }})
+    {% endfor %}
+        }
+    }
+
+    func draw(inRect target: CGRect, alignment: Alignment = .center){
+        switch self {
+    {% for svg in svgs %}
+        case .{{ enumCase(svg.name) }}: return {{ class_name }}.draw{{ svg.name | title }}(inRect: target, alignment: alignment)
     {% endfor %}
         }
     }
