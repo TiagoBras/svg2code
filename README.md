@@ -255,8 +255,9 @@ It doesn't implement the full SVG 1.1 specification.
 
 Whenever I find something from the specification that I need I implement it.
 
-I might also accept implementation requests, e.g., if someone needs shadows or gradients support.
+I might also accept implementation requests, e.g., if someone needs shadows or gradients support. 
 
+[Future: Instead of using templates for formating, I'll just feed unformatted code into a formater.]
 
 License
 -------
